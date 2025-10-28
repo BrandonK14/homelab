@@ -16,6 +16,10 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Preflight: require passwordless sudo
+        run: |
+          set -euo pipefail
+          sudo -n true || { echo "This runner needs passwordless sudo (NOPASSWD)"; exit 1; }
       # Runs a set of commands using the runners shell
       - name: Install K3s
         run: |
