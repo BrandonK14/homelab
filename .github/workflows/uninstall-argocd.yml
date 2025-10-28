@@ -21,12 +21,10 @@ jobs:
           set -euxo pipefail
           export KUBECONFIG="/home/brandon/.kube/config"
           kubectl get ns | grep argo
-          env | grep KUBECONFIG
-          kubectl create namespace argocd
-          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   
   # This workflow contains a single job called "build"
   uninstall-argo:
+    needs: pre-check
     # The type of runner that the job will run on
     runs-on: self-hosted
 
