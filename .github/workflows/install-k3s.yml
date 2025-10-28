@@ -24,4 +24,4 @@ jobs:
       - name: Install K3s
         run: |
           set -euxo pipefail
-          curl -sfL https://get.k3s.io | sh -
+          curl -sfL https://get.k3s.io | sudo sh -
