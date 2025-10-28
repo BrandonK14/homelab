@@ -10,7 +10,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  argo-ns-creation:
     # The type of runner that the job will run on
     runs-on: self-hosted
 
@@ -23,14 +23,25 @@ jobs:
           env | grep KUBECONFIG
           kubectl create namespace argocd
           kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-          
+
+  install-argo:
+    needs: argo-ns-creation
+    # The type of runner that the job will run on
+    runs-on: self-hosted
+    steps:
+    # Steps represent a sequence of tasks that will be executed as part of the job
       - name: Install ArgoCD
         run: |
           set -euxo pipefail
           curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
           sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
           rm argocd-linux-amd64
-      
+          
+  argo-port-forwarding:
+    needs: [argo-ns-creation, install-argo]
+    # The type of runner that the job will run on
+    runs-on: self-hosted
+    steps:
       - name: K3s port forwarding
         run: |
           set -euxo pipefail
