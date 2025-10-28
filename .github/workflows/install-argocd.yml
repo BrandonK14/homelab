@@ -45,6 +45,7 @@ jobs:
       - name: K3s port forwarding
         run: |
           set -euxo pipefail
+          export KUBECONFIG="/home/brandon/.kube/config"
           kubectl port-forward svc/argocd-server -n argocd 8080:443
           argocd admin initial-password -n argocd
        
