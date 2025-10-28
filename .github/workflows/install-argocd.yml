@@ -19,7 +19,8 @@ jobs:
       - name: Create argocd k3s namespace
         run: |
           set -euxo pipefail
-          echo "KUBECONFIG=$KUBECONFIG"
+          export KUBECONFIG="/home/brandon/.kube/config"
+          env | grep KUBECONFIG
           kubectl create namespace argocd
           kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
           
