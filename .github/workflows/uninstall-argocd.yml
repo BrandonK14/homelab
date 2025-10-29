@@ -1,42 +1,32 @@
-# This is a basic workflow to help you get started with Actions
-
 name: uninstall ArgoCD
-
-# Controls when the workflow will run
 on:
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+env: 
+  HOMELAB_REPO: ${{secrets.HOMELAB_REPO}}
+  KUBECONFIG: ${{secrets.KUBECONFIG}}
 jobs:
-  # This workflow contains a single job called "build"
   pre-check:
-    # The type of runner that the job will run on
     runs-on: self-hosted
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checks ns exists
         run: |
           set -euxo pipefail
-          export KUBECONFIG="/home/brandon/.kube/config"
+          export KUBECONFIG="$KUBECONFIG"
           kubectl get ns | grep argo
-  
-  # This workflow contains a single job called "build"
+
   uninstall-argo:
     needs: pre-check
-    # The type of runner that the job will run on
     runs-on: self-hosted
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Uninstall argocd
         run: |
           set -euxo pipefail
           sudo rm -f /usr/local/bin/argocd
-          export KUBECONFIG="/home/brandon/.kube/config"
+          export KUBECONFIG="$KUBECONFIG"
           kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
           kubectl delete namespace argocd
+          gh secret delete ARGOCD_ADMIN_PASSWORD --repo "$HOMELAB_REPO" --confirm
+
         
        
           
