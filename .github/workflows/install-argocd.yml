@@ -1,35 +1,26 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Install ArgoCD
-
-# Controls when the workflow will run
 on:
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+env:
+  KUBECONFIG: ${{ secrets.KUBECONFIG }}      # path only, not "export ..."
+  HOMELAB_REPO: ${{ secrets.HOMELAB_REPO }}
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   argo-ns-creation:
-    # The type of runner that the job will run on
     runs-on: self-hosted
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Create argocd k3s namespace
         run: |
           set -euxo pipefail
-          export KUBECONFIG="/home/brandon/.kube/config"
+          export KUBECONFIG="$KUBECONFIG"
           env | grep KUBECONFIG
           kubectl create namespace argocd
           kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
   install-argo:
     needs: argo-ns-creation
-    # The type of runner that the job will run on
     runs-on: self-hosted
     steps:
-    # Steps represent a sequence of tasks that will be executed as part of the job
       - name: Install ArgoCD
         run: |
           set -euxo pipefail
@@ -39,28 +30,26 @@ jobs:
           
   argo-svc-nodeport:
     needs: [argo-ns-creation, install-argo]
-    # The type of runner that the job will run on
     runs-on: self-hosted
     steps:
       - name: K3s port forwarding
         run: |
           set -euxo pipefail
-          export KUBECONFIG="/home/brandon/.kube/config"
+          export KUBECONFIG="$KUBECONFIG"
           kubectl patch service argocd-server -n argocd --type merge -p '{"spec":{"type":"NodePort"}}'
 
   argo-store-secret:
     needs: [argo-ns-creation, install-argo, argo-svc-nodeport]
-    # The type of runner that the job will run on
     runs-on: self-hosted
     steps:
       - name: Secret store
         run: |
           set -euxo pipefail
-          export KUBECONFIG="/home/brandon/.kube/config"
+          export KUBECONFIG="$KUBECONFIG"
           { set +x; } 2>/dev/null #quiet next command
           PASS="$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)"
           { set -x; } 2>/dev/null #verbose logging output again
           echo "::add-mask::$PASS"
-          gh secret set ARGOCD_ADMIN_PASSWORD --repo "BrandonK14/homelab" --body "$PASS"
+          gh secret set ARGOCD_ADMIN_PASSWORD --repo "$HOMELAB_REPO" --body "$PASS"
        
           
